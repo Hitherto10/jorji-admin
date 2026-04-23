@@ -2,11 +2,11 @@ import { supabase } from '../../../lib/supabase'
 
 export const tableService = {
   async get(tableKey, options = {}) {
-    const { page = 0, pageSize = 50, search, searchField, filters, sortField, sortOrder } = options
+    const { page = 0, pageSize = 50, search, searchField, columnFilters, sortField, sortOrder } = options
     let query = supabase
-      .from(tableKey)
-      .select('*', { count: 'exact' })
-      .range(page * pageSize, (page + 1) * pageSize - 1)
+        .from(tableKey)
+        .select('*', { count: 'exact' })
+        .range(page * pageSize, (page + 1) * pageSize - 1)
 
     if (search && searchField) {
       query = query.ilike(searchField, `%${search}%`)
@@ -16,10 +16,10 @@ export const tableService = {
       query = query.order(sortField, { ascending: sortOrder === 'asc' })
     }
 
-    // Add filters if provided
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+    // Apply column equality filters (e.g. product_id = x)
+    if (columnFilters && typeof columnFilters === 'object') {
+      Object.entries(columnFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
           query = query.eq(key, value)
         }
       })
@@ -32,28 +32,28 @@ export const tableService = {
 
   async create(tableKey, payload) {
     const { data, error } = await supabase
-      .from(tableKey)
-      .insert(payload)
-      .select()
+        .from(tableKey)
+        .insert(payload)
+        .select()
     if (error) throw error
     return data[0]
   },
 
   async update(tableKey, id, payload, primaryKey = 'id') {
     const { data, error } = await supabase
-      .from(tableKey)
-      .update(payload)
-      .eq(primaryKey, id)
-      .select()
+        .from(tableKey)
+        .update(payload)
+        .eq(primaryKey, id)
+        .select()
     if (error) throw error
     return data[0]
   },
 
   async delete(tableKey, id, primaryKey = 'id') {
     const { error } = await supabase
-      .from(tableKey)
-      .delete()
-      .eq(primaryKey, id)
+        .from(tableKey)
+        .delete()
+        .eq(primaryKey, id)
     if (error) throw error
   }
 }
