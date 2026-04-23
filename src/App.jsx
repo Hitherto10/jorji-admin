@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { TABLES, TABLE_GROUPS } from './config/tables'
 import TableView from './components/TableView'
+import ProductsTable from './components/ProductsTable'
 
 export default function App() {
   const [activeTable, setActiveTable] = useState('products')
@@ -9,10 +10,10 @@ export default function App() {
   const tableDef = TABLES[activeTable]
 
   return (
-    <div className="flex h-screen bg-gray-950 text-gray-100 font-mono overflow-hidden">
+    <div className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden font-[Bricolage_Grotesque]">
 
       {/* Sidebar */}
-      <aside className={`flex-shrink-0 flex flex-col border-r border-gray-800 transition-all duration-200 ${
+      <aside className={`shrink-0 flex flex-col border-r border-gray-800 transition-all duration-200 ${
         sidebarOpen ? 'w-56' : 'w-12'
       }`}>
 
@@ -86,11 +87,15 @@ export default function App() {
 
         {/* Table view fills remaining space */}
         <div className="flex-1 overflow-hidden">
-          <TableView
-            key={activeTable}
-            tableKey={activeTable}
-            tableDef={tableDef}
-          />
+          {activeTable === 'products' ? (
+            <ProductsTable />
+          ) : (
+            <TableView
+              key={activeTable}
+              tableKey={activeTable}
+              tableDef={tableDef}
+            />
+          )}
         </div>
       </main>
     </div>

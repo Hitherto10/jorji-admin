@@ -32,44 +32,6 @@ export const TABLES = {
     ],
   },
 
-  product_variants: {
-    label: 'Product Variants',
-    icon: '🎨',
-    primaryKey: 'id',
-    displayField: 'sku',
-    fields: [
-      { key: 'id',           label: 'ID',         type: 'text',    readonly: true },
-      { key: 'product_id',   label: 'Product',    type: 'uuid',    required: true, fk: { table: 'products', labelField: 'name' } },
-      { key: 'size',         label: 'Size',       type: 'text' },
-      { key: 'color',        label: 'Color Name', type: 'text' },
-      { key: 'color_hex',    label: 'Color Hex Values (comma separated)', type: 'array' },
-      { key: 'option_name',  label: 'Option Name', type: 'text' },
-      { key: 'option_value', label: 'Option Value', type: 'text' },
-      { key: 'sku',          label: 'SKU',        type: 'text' },
-      { key: 'stock',        label: 'Stock',      type: 'number',  required: true, defaultValue: 0 },
-      { key: 'price',        label: 'Price Override (₦)', type: 'number' },
-      { key: 'is_active',    label: 'Active',     type: 'boolean', defaultValue: true },
-      { key: 'created_at',   label: 'Created At', type: 'datetime', readonly: true },
-    ],
-  },
-
-  product_images: {
-    label: 'Product Images',
-    icon: '🖼️',
-    primaryKey: 'id',
-    displayField: 'url',
-    fields: [
-      { key: 'id',          label: 'ID',         type: 'text',    readonly: true },
-      { key: 'product_id',  label: 'Product',    type: 'uuid',    required: true, fk: { table: 'products', labelField: 'name' } },
-      { key: 'variant_id',  label: 'Variant (optional)', type: 'uuid', fk: { table: 'product_variants', labelField: 'sku' } },
-      { key: 'url',         label: 'Image URL',  type: 'text',    required: true },
-      { key: 'alt_text',    label: 'Alt Text',   type: 'text' },
-      { key: 'sort_order',  label: 'Sort Order', type: 'number',  defaultValue: 0 },
-      { key: 'is_primary',  label: 'Primary Image', type: 'boolean', defaultValue: false },
-      { key: 'created_at',  label: 'Created At', type: 'datetime', readonly: true },
-    ],
-  },
-
   categories: {
     label: 'Categories',
     icon: '📂',
@@ -321,12 +283,50 @@ export const TABLES = {
       { key: 'subscribed_at', label: 'Subscribed At', type: 'datetime', readonly: true },
     ],
   },
+
+  product_variants: {
+    label: 'Product Variants',
+    icon: '🎨',
+    primaryKey: 'id',
+    displayField: 'sku',
+    fields: [
+      { key: 'id', label: 'ID', type: 'text', readonly: true },
+      { key: 'product_id', label: 'Product', type: 'uuid', required: true, fk: { table: 'products', labelField: 'name' } },
+      { key: 'size', label: 'Size', type: 'text' },
+      { key: 'color', label: 'Color Name', type: 'text' },
+      { key: 'color_hex', label: 'Color Hex Values (comma separated)', type: 'array' },
+      { key: 'option_name', label: 'Option Name', type: 'text' },
+      { key: 'option_value', label: 'Option Value', type: 'text' },
+      { key: 'sku', label: 'SKU', type: 'text' },
+      { key: 'stock', label: 'Stock', type: 'number', required: true, defaultValue: 0 },
+      { key: 'price', label: 'Price Override (₦)', type: 'number' },
+      { key: 'is_active', label: 'Active', type: 'boolean', defaultValue: true },
+      { key: 'created_at', label: 'Created At', type: 'datetime', readonly: true },
+    ],
+  },
+
+  product_images: {
+    label: 'Product Images',
+    icon: '🖼️',
+    primaryKey: 'id',
+    displayField: 'url',
+    fields: [
+      { key: 'id', label: 'ID', type: 'text', readonly: true },
+      { key: 'product_id', label: 'Product', type: 'uuid', required: true, fk: { table: 'products', labelField: 'name' } },
+      { key: 'variant_id', label: 'Variant (optional)', type: 'uuid', fk: { table: 'product_variants', labelField: 'sku' } },
+      { key: 'url', label: 'Image URL', type: 'text', required: true },
+      { key: 'alt_text', label: 'Alt Text', type: 'text' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', defaultValue: 0 },
+      { key: 'is_primary', label: 'Primary Image', type: 'boolean', defaultValue: false },
+      { key: 'created_at', label: 'Created At', type: 'datetime', readonly: true },
+    ],
+  },
 }
 
 export const TABLE_GROUPS = [
   {
     label: 'Catalogue',
-    tables: ['products', 'product_variants', 'product_images', 'categories', 'collections', 'collection_products', 'size_charts'],
+    tables: ['products', 'categories', 'collections', 'collection_products', 'size_charts'],
   },
   {
     label: 'Orders',

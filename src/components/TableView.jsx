@@ -4,7 +4,7 @@ import RecordModal from './RecordModal'
 
 const PAGE_SIZE = 50
 
-export default function TableView({ tableKey, tableDef }) {
+export default function TableView({ tableKey, tableDef, filter = {} }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -37,6 +37,13 @@ export default function TableView({ tableKey, tableDef }) {
       }
     }
 
+    // Apply additional filters if any
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value) {
+        query = query.eq(key, value)
+      }
+    })
+
     const { data, error: err, count } = await query
     setLoading(false)
 
@@ -46,7 +53,7 @@ export default function TableView({ tableKey, tableDef }) {
       setRows(data || [])
       setTotal(count || 0)
     }
-  }, [tableKey, page, search])
+  }, [tableKey, page, search, filter])
 
   useEffect(() => {
     setPage(0)
@@ -78,7 +85,7 @@ export default function TableView({ tableKey, tableDef }) {
     if (field.type === 'json' || field.type === 'array') return (
       <span className="text-gray-500 text-xs font-mono">{JSON.stringify(value).slice(0, 40)}…</span>
     )
-    if (typeof value === 'string' && value.length > 50) return value.slice(0, 50) + '…'
+    if (typeof value === 'string' && value.length > 50) return value + '\n'
     return String(value)
   }
 
@@ -164,7 +171,7 @@ export default function TableView({ tableKey, tableDef }) {
                       onClick={() => setExpandedRow(isExpanded ? null : rowKey)}
                     >
                       {tableColumns.map(f => (
-                        <td key={f.key} className="px-4 py-2.5 text-gray-300 whitespace-nowrap">
+                        <td key={f.key} className="px-4 py-2.5 text-gray-300 whitespace-nowrap max-w-60 overflow-hidden">
                           {formatCell(f, row[f.key])}
                         </td>
                       ))}
@@ -195,7 +202,7 @@ export default function TableView({ tableKey, tableDef }) {
                             {tableDef.fields.filter(f => !f.hidden).map(f => (
                               <div key={f.key}>
                                 <div className="text-xs text-gray-500 mb-0.5 uppercase tracking-wide">{f.label}</div>
-                                <div className="text-sm text-gray-300 break-all">
+                                <div className="text-sm text-gray-300 break-all max-w-100">
                                   {formatCell(f, row[f.key])}
                                 </div>
                               </div>
