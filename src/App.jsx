@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { TABLES, TABLE_GROUPS } from './config/tables'
 import TableView from './components/TableView'
 import ProductsTable from './components/ProductsTable'
+import white_logo from './assets/white-logo.png'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function App() {
   const [activeTable, setActiveTable] = useState('products')
@@ -10,7 +12,7 @@ export default function App() {
   const tableDef = TABLES[activeTable]
 
   return (
-    <div className="flex h-screen bg-gray-950 text-gray-100 overflow-hidden font-[Bricolage_Grotesque]">
+    <div className="flex h-screen text-gray-100 overflow-hidden font-[Bricolage_Grotesque]">
 
       {/* Sidebar */}
       <aside className={`shrink-0 flex flex-col border-r border-gray-800 transition-all duration-200 ${
@@ -20,16 +22,14 @@ export default function App() {
         {/* Brand */}
         <div className="flex items-center justify-between px-3 py-4 border-b border-gray-800">
           {sidebarOpen && (
-            <span className="text-indigo-400 font-semibold text-sm tracking-tight">
-              JorjiMara Admin
-            </span>
+              <img className={`w-4/5  `} alt={``} src={white_logo} />
           )}
           <button
             onClick={() => setSidebarOpen(v => !v)}
-            className="text-gray-600 hover:text-gray-300 transition-colors text-lg leading-none ml-auto"
+            className="text-gray-600 hover:text-gray-300 transition-colors text-xl leading-none ml-auto"
             title={sidebarOpen ? 'Collapse' : 'Expand'}
           >
-            {sidebarOpen ? '‹' : '›'}
+            {sidebarOpen ? <ChevronLeft className={`w-5`} />  : <ChevronRight className={`w-5`} />}
           </button>
         </div>
 
@@ -56,7 +56,7 @@ export default function App() {
                     }`}
                     title={!sidebarOpen ? def.label : undefined}
                   >
-                    <span className="text-base flex-shrink-0">{def.icon}</span>
+                    <span className="text-base shrink-0">{def.icon}</span>
                     {sidebarOpen && (
                       <span className="truncate">{def.label}</span>
                     )}
@@ -68,18 +68,12 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Footer */}
-        {sidebarOpen && (
-          <div className="px-3 py-3 border-t border-gray-800">
-            <div className="text-xs text-gray-700">Internal tool — no auth</div>
-          </div>
-        )}
       </aside>
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-800 bg-gray-950/80 flex-shrink-0">
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-800 bg-gray-950/80 shrink-0">
           <span className="text-xl">{tableDef.icon}</span>
           <h1 className="text-white font-semibold">{tableDef.label}</h1>
           <span className="text-gray-600 text-sm ml-1">/ {activeTable}</span>
