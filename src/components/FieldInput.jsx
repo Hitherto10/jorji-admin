@@ -1,42 +1,28 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { tableService } from '../admin/shared/services'
 
 // Renders the correct input for a given field type
 export default function FieldInput({ field, value, onChange, disabled }) {
   const [fkOptions, setFkOptions] = useState([])
 
   useEffect(() => {
-    if (field.fk) {
-      supabase
-        .from(field.fk.table)
-        .select(`id, ${field.fk.labelField}`)
-        .limit(500)
-        .then(({ data }) => setFkOptions(data || []))
-    }
+    if (!field.fk) return
+    tableService.get(field.fk.table, { pageSize: 500 })
+      .then(({ data }) => setFkOptions(data || []))
+      .catch(err => console.error('Failed to load FK options:', err))
   }, [field.fk?.table])
 
   const base = `w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-100
     focus:outline-none focus:border-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed`
 
   if (disabled) {
-    return (
-      <input
-        className={base}
-        value={value ?? ''}
-        disabled
-        readOnly
-      />
-    )
+    return <input className={base} value={value ?? ''} disabled readOnly />
   }
 
   // FK dropdown
   if (field.fk) {
     return (
-      <select
-        className={base}
-        value={value ?? ''}
-        onChange={e => onChange(e.target.value || null)}
-      >
+      <select className={base} value={value ?? ''} onChange={e => onChange(e.target.value || null)}>
         <option value="">— none —</option>
         {fkOptions.map(opt => (
           <option key={opt.id} value={opt.id}>
@@ -50,11 +36,7 @@ export default function FieldInput({ field, value, onChange, disabled }) {
   // Select with predefined options
   if (field.type === 'select') {
     return (
-      <select
-        className={base}
-        value={value ?? ''}
-        onChange={e => onChange(e.target.value)}
-      >
+      <select className={base} value={value ?? ''} onChange={e => onChange(e.target.value)}>
         <option value="">— select —</option>
         {field.options.map(opt => (
           <option key={opt} value={opt}>{opt}</option>
@@ -69,13 +51,9 @@ export default function FieldInput({ field, value, onChange, disabled }) {
       <label className="flex items-center gap-2 cursor-pointer">
         <div
           onClick={() => onChange(!value)}
-          className={`relative w-10 h-5 rounded-full transition-colors ${
-            value ? 'bg-indigo-500' : 'bg-gray-700'
-          }`}
+          className={`relative w-10 h-5 rounded-full transition-colors ${value ? 'bg-indigo-500' : 'bg-gray-700'}`}
         >
-          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-            value ? 'translate-x-5' : 'translate-x-0.5'
-          }`} />
+          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${value ? 'translate-x-5' : 'translate-x-0.5'}`} />
         </div>
         <span className="text-sm text-gray-400">{value ? 'Yes' : 'No'}</span>
       </label>
@@ -102,11 +80,8 @@ export default function FieldInput({ field, value, onChange, disabled }) {
         className={`${base} min-h-[120px] resize-y font-mono text-xs`}
         value={display}
         onChange={e => {
-          try {
-            onChange(JSON.parse(e.target.value))
-          } catch {
-            onChange(e.target.value) // allow partial edits
-          }
+          try { onChange(JSON.parse(e.target.value)) }
+          catch { onChange(e.target.value) }
         }}
         rows={5}
         placeholder="[]"
@@ -114,7 +89,7 @@ export default function FieldInput({ field, value, onChange, disabled }) {
     )
   }
 
-  // Array — stored as Postgres array, edited as comma-separated string
+  // Array — comma-separated
   if (field.type === 'array') {
     const display = Array.isArray(value) ? value.join(', ') : (value ?? '')
     return (

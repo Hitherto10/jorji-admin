@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import FieldInput from './FieldInput'
-import { supabase } from '../lib/supabase'
+import { tableService } from '../admin/shared/services'
 
 export default function RecordModal({ tableKey, tableDef, record, onClose, onSaved }) {
   const isEdit = !!record
@@ -8,7 +8,6 @@ export default function RecordModal({ tableKey, tableDef, record, onClose, onSav
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
-  // Initialise form with existing record values or field defaults
   useEffect(() => {
     const initial = {}
     tableDef.fields.forEach(f => {
@@ -24,41 +23,26 @@ export default function RecordModal({ tableKey, tableDef, record, onClose, onSav
     setSaving(true)
     setError(null)
 
-    // Build payload — exclude readonly fields and null UUIDs
+    // Build payload — exclude readonly fields and coerce empty UUID to null
     const payload = {}
     tableDef.fields.forEach(f => {
       if (f.readonly) return
       const val = form[f.key]
-      // Don't send empty string for UUID fields — send null
-      if (f.type === 'uuid' && !val) {
-        payload[f.key] = null
-      } else {
-        payload[f.key] = val ?? null
-      }
+      payload[f.key] = (f.type === 'uuid' && !val) ? null : (val ?? null)
     })
 
-    let result
-    if (isEdit) {
-      const pkField = tableDef.primaryKey
-      result = await supabase
-        .from(tableKey)
-        .update(payload)
-        .eq(pkField, record[pkField])
-        .select()
-    } else {
-      result = await supabase
-        .from(tableKey)
-        .insert(payload)
-        .select()
-    }
-
-    setSaving(false)
-
-    if (result.error) {
-      setError(result.error.message)
-    } else {
+    try {
+      if (isEdit) {
+        await tableService.update(tableKey, record[tableDef.primaryKey], payload, tableDef.primaryKey)
+      } else {
+        await tableService.create(tableKey, payload)
+      }
       onSaved()
       onClose()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
   }
 

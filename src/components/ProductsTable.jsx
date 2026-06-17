@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
+import { tableService } from '../admin/shared/services'
 import { Dropdown } from '../admin/shared/ui_components/index.js'
 import ProductEditor from './ProductEditor.jsx'
 
@@ -21,31 +21,32 @@ export default function ProductsTable() {
     setLoading(true)
     setError(null)
     try {
-      let query = supabase
-          .from('products')
-          .select('*', { count: 'exact' })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-          .order('created_at', { ascending: false })
-
-      if (search) query = query.ilike('name', `%${search}%`)
-
-      const { data: prodData, error: prodErr, count } = await query
-      if (prodErr) throw prodErr
+      const { data: prodData, count } = await tableService.get('products', {
+        page,
+        pageSize: PAGE_SIZE,
+        search: search || undefined,
+        searchField: 'name',
+        sortField: 'created_at',
+        sortOrder: 'desc',
+      })
 
       const prodIds = (prodData || []).map(p => p.id)
+
       const [varRes, imgRes, catRes] = await Promise.all([
         prodIds.length
-            ? supabase.from('product_variants').select('product_id, stock, sku').in('product_id', prodIds)
-            : Promise.resolve({ data: [], error: null }),
+          ? tableService.get('product_variants', {
+              inFilters: { product_id: prodIds },
+              pageSize: 500,
+            })
+          : Promise.resolve({ data: [] }),
         prodIds.length
-            ? supabase.from('product_images').select('product_id, url, is_primary').in('product_id', prodIds)
-            : Promise.resolve({ data: [], error: null }),
-        supabase.from('categories').select('id, name'),
+          ? tableService.get('product_images', {
+              inFilters: { product_id: prodIds },
+              pageSize: 500,
+            })
+          : Promise.resolve({ data: [] }),
+        tableService.get('categories', { pageSize: 500 }),
       ])
-
-      if (varRes.error) throw varRes.error
-      if (imgRes.error) throw imgRes.error
-      if (catRes.error) throw catRes.error
 
       setProducts(prodData || [])
       setVariants(varRes.data || [])
@@ -73,9 +74,12 @@ export default function ProductsTable() {
 
   const handleDelete = async (product) => {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return
-    const { error: err } = await supabase.from('products').delete().eq('id', product.id)
-    if (err) alert(`Delete failed: ${err.message}`)
-    else load()
+    try {
+      await tableService.delete('products', product.id)
+      load()
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`)
+    }
   }
 
   const columns = [

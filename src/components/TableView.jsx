@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect, useCallback } from 'react'
+import { tableService } from '../admin/shared/services'
 import RecordModal from './RecordModal'
 
 const PAGE_SIZE = 50
@@ -15,7 +15,6 @@ export default function TableView({ tableKey, tableDef, filter = {} }) {
   const [deleting, setDeleting] = useState(null)
   const [expandedRow, setExpandedRow] = useState(null)
 
-  // Serialise filter so useCallback doesn't see a new object reference each render
   const filterKey = JSON.stringify(filter)
 
   const tableColumns = tableDef.fields
@@ -27,39 +26,22 @@ export default function TableView({ tableKey, tableDef, filter = {} }) {
     setError(null)
 
     try {
-      let query = supabase
-          .from(tableKey)
-          .select('*', { count: 'exact' })
-          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-
-      if (search && tableDef.displayField) {
-        const displayFieldDef = tableDef.fields.find(f => f.key === tableDef.displayField)
-        if (displayFieldDef?.type === 'text') {
-          query = query.ilike(tableDef.displayField, `%${search}%`)
-        }
-      }
-
-      // Parse the serialised filter back to apply
-      const parsedFilter = JSON.parse(filterKey)
-      Object.entries(parsedFilter).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          query = query.eq(key, value)
-        }
+      const result = await tableService.get(tableKey, {
+        page,
+        pageSize: PAGE_SIZE,
+        search: search || undefined,
+        searchField: tableDef.displayField,
+        columnFilters: JSON.parse(filterKey),
       })
-
-      const { data, error: err, count } = await query
-
-      if (err) throw err
-      setRows(data || [])
-      setTotal(count || 0)
+      setRows(result.data)
+      setTotal(result.count)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-    // filterKey is the stable serialised version of filter
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableKey, page, search, filterKey, tableDef.displayField])
+  }, [tableKey, page, search, tableDef.displayField, filterKey])
 
   useEffect(() => {
     setPage(0)
@@ -72,14 +54,14 @@ export default function TableView({ tableKey, tableDef, filter = {} }) {
     if (!confirm(`Delete this ${tableDef.label} record? This cannot be undone.`)) return
     setDeleting(row[tableDef.primaryKey])
 
-    const { error: err } = await supabase
-        .from(tableKey)
-        .delete()
-        .eq(tableDef.primaryKey, row[tableDef.primaryKey])
-
-    setDeleting(null)
-    if (err) alert(`Delete failed: ${err.message}`)
-    else load()
+    try {
+      await tableService.delete(tableKey, row[tableDef.primaryKey], tableDef.primaryKey)
+      load()
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`)
+    } finally {
+      setDeleting(null)
+    }
   }
 
   const formatCell = (field, value) => {

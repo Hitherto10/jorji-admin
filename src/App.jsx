@@ -2,14 +2,26 @@ import { useState } from 'react'
 import { TABLES, TABLE_GROUPS } from './config/tables'
 import TableView from './components/TableView'
 import ProductsTable from './components/ProductsTable'
+import Login from './components/Login'
+import { isAuthenticated, clearToken } from './lib/auth.js'
 import white_logo from './assets/white-logo.png'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 
 export default function App() {
+  const [authed, setAuthed] = useState(isAuthenticated)
   const [activeTable, setActiveTable] = useState('products')
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
+  if (!authed) {
+    return <Login onSuccess={() => setAuthed(true)} />
+  }
+
   const tableDef = TABLES[activeTable]
+
+  const handleLogout = () => {
+    clearToken()
+    setAuthed(false)
+  }
 
   return (
     <div className="flex h-screen text-gray-100 overflow-hidden font-[Bricolage_Grotesque]">
@@ -22,14 +34,14 @@ export default function App() {
         {/* Brand */}
         <div className="flex items-center justify-between px-3 py-4 border-b border-gray-800">
           {sidebarOpen && (
-              <img className={`w-4/5  `} alt={``} src={white_logo} />
+              <img className="w-4/5" alt="" src={white_logo} />
           )}
           <button
             onClick={() => setSidebarOpen(v => !v)}
             className="text-gray-600 hover:text-gray-300 transition-colors text-xl leading-none ml-auto"
             title={sidebarOpen ? 'Collapse' : 'Expand'}
           >
-            {sidebarOpen ? <ChevronLeft className={`w-5`} />  : <ChevronRight className={`w-5`} />}
+            {sidebarOpen ? <ChevronLeft className="w-5" /> : <ChevronRight className="w-5" />}
           </button>
         </div>
 
@@ -57,9 +69,7 @@ export default function App() {
                     title={!sidebarOpen ? def.label : undefined}
                   >
                     <span className="text-base shrink-0">{def.icon}</span>
-                    {sidebarOpen && (
-                      <span className="truncate">{def.label}</span>
-                    )}
+                    {sidebarOpen && <span className="truncate">{def.label}</span>}
                   </button>
                 )
               })}
@@ -68,6 +78,17 @@ export default function App() {
           ))}
         </nav>
 
+        {/* Logout */}
+        <div className="border-t border-gray-800 p-2">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-600 hover:text-gray-300 hover:bg-gray-800/50 rounded transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {sidebarOpen && <span>Sign out</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
